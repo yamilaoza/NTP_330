@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de evaluación de riesgos laborales basado en la metodología NTP 330 del INSHT">
+    <meta name="author" content="Técnica Prevencionista">
+    <meta name="keywords" content="NTP 330, evaluación de riesgos, prevención, seguridad laboral, Uruguay">
+    
+    <title>Evaluación de Riesgos - NTP 330</title>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        
+        <header class="header">
+            <h1>Evaluación de Riesgos Laborales</h1>
+            <p>Sistema basado en NTP 330 - INSHT (Uruguay)</p>
+        </header>
+
+        <main class="content">
+            
+            <section class="form-section" aria-labelledby="form-title">
+                <h2 id="form-title">Nueva Evaluación de Riesgo</h2>
+                
+                <form id="riskForm" novalidate>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombreRiesgo">Nombre del Riesgo *</label>
+                            <input 
+                                type="text" 
+                                id="nombreRiesgo" 
+                                name="nombreRiesgo"
+                                placeholder="Ej: Caída en altura" 
+                                required
+                                aria-required="true">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="area">Área/Puesto de Trabajo *</label>
+                            <input 
+                                type="text" 
+                                id="area" 
+                                name="area"
+                                placeholder="Ej: Producción" 
+                                required
+                                aria-required="true">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion">Descripción del Riesgo</label>
+                        <textarea 
+                            id="descripcion" 
+                            name="descripcion"
+                            placeholder="Descripción detallada del riesgo identificado..."
+                            rows="3"></textarea>
+                    </div>
+
+                    <div class="info-box" role="note">
+                        <strong>Metodología NTP 330:</strong>
+                        Nivel de Riesgo (NR) = Nivel de Deficiencia (ND) × Nivel de Exposición (NE) × Nivel de Consecuencia (NC)
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nd">Nivel de Deficiencia (ND) *</label>
+                            <select id="nd" name="nd" required aria-required="true">
+                                <option value="">Seleccionar...</option>
+                                <option value="10">10 - Muy Deficiente</option>
+                                <option value="6">6 - Deficiente</option>
+                                <option value="2">2 - Mejorable</option>
+                                <option value="0">0 - Aceptable</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ne">Nivel de Exposición (NE) *</label>
+                            <select id="ne" name="ne" required aria-required="true">
+                                <option value="">Seleccionar...</option>
+                                <option value="4">4 - Continuada</option>
+                                <option value="3">3 - Frecuente</option>
+                                <option value="2">2 - Ocasional</option>
+                                <option value="1">1 - Esporádica</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nc">Nivel de Consecuencia (NC) *</label>
+                            <select id="nc" name="nc" required aria-required="true">
+                                <option value="">Seleccionar...</option>
+                                <option value="100">100 - Mortal o Catastrófico</option>
+                                <option value="60">60 - Muy Grave</option>
+                                <option value="25">25 - Grave</option>
+                                <option value="10">10 - Leve</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="medidas">Medidas Preventivas Propuestas</label>
+                        <textarea 
+                            id="medidas" 
+                            name="medidas"
+                            placeholder="Medidas preventivas y correctivas a implementar..."
+                            rows="3"></textarea>
+                    </div>
+
+                    <div id="resultBox" class="result-box" style="display: none;" role="status" aria-live="polite">
+                        <h3>Resultado del Cálculo</h3>
+                        <div class="value" id="resultValue">0</div>
+                        <div class="label" id="resultLabel">-</div>
+                    </div>
+
+                    <div class="buttons">
+                        <button type="submit" class="btn-primary">
+                            Agregar Riesgo
+                        </button>
+                        <button type="button" class="btn-secondary" id="btnLimpiar">
+                            Limpiar Formulario
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="form-section" aria-labelledby="table-title">
+                <h2 id="table-title">Riesgos Evaluados</h2>
+                
+                <div id="tablaContainer">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
+                        <h3>No hay riesgos evaluados</h3>
+                        <p>Comienza agregando tu primera evaluación de riesgo</p>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="button" class="btn-success" id="btnGenerarPDF">
+                        Generar Informe PDF
+                    </button>
+                    <button type="button" class="btn-danger" id="btnLimpiarTodos">
+                        Limpiar Todos los Riesgos
+                    </button>
+                </div>
+            </section>
+            
+        </main>
+        
+        <footer class="footer">
+            <p>2026 - Sistema de Evaluación de Riesgos NTP 330</p>
+            <p>Desarrollado para técnicos prevencionistas en Uruguay</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
