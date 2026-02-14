@@ -25,7 +25,8 @@ const CONFIG = {
 // Estado de la aplicación
 const AppState = {
     riesgos: [],
-    editIndex: -1
+    editIndex: -1,
+    ordenActual: 'prioridad'
 };
 
 // Calculadora NTP 330
@@ -45,6 +46,35 @@ const Calculator = {
             return { nivel: 'III', texto: 'Mejorar si es posible', prioridad: 3 };
         }
         return { nivel: 'IV', texto: 'Mantener medidas', prioridad: 4 };
+    }
+};
+
+// Módulo de ordenamiento
+const Sorter = {
+    ordenar(riesgos, criterio) {
+        const copia = [...riesgos];
+        
+        switch(criterio) {
+            case 'prioridad':
+                return copia.sort((a, b) => {
+                    if (a.prioridad !== b.prioridad) {
+                        return a.prioridad - b.prioridad;
+                    }
+                    return b.nr - a.nr;
+                });
+            
+            case 'nr':
+                return copia.sort((a, b) => b.nr - a.nr);
+            
+            case 'nombre':
+                return copia.sort((a, b) => a.nombre.localeCompare(b.nombre));
+            
+            case 'area':
+                return copia.sort((a, b) => a.area.localeCompare(b.area));
+            
+            default:
+                return copia;
+        }
     }
 };
 
@@ -117,15 +147,15 @@ const Validator = {
             errors.push('El área es obligatoria');
         }
         
-        if (!data.nd || isNaN(data.nd)) {
+        if (isNaN(data.nd) || data.nd === '' || data.nd === null || data.nd === undefined) {
             errors.push('Debe seleccionar el Nivel de Deficiencia');
         }
         
-        if (!data.ne || isNaN(data.ne)) {
+        if (isNaN(data.ne) || data.ne === '' || data.ne === null || data.ne === undefined) {
             errors.push('Debe seleccionar el Nivel de Exposición');
         }
         
-        if (!data.nc || isNaN(data.nc)) {
+        if (isNaN(data.nc) || data.nc === '' || data.nc === null || data.nc === undefined) {
             errors.push('Debe seleccionar el Nivel de Consecuencia');
         }
         
@@ -139,13 +169,17 @@ const Validator = {
 // Gestor de interfaz
 const UI = {
     obtenerDatosFormulario() {
+        const ndValue = document.getElementById('nd').value;
+        const neValue = document.getElementById('ne').value;
+        const ncValue = document.getElementById('nc').value;
+        
         return {
             nombre: document.getElementById('nombreRiesgo').value.trim(),
             area: document.getElementById('area').value.trim(),
             descripcion: document.getElementById('descripcion').value.trim(),
-            nd: parseInt(document.getElementById('nd').value),
-            ne: parseInt(document.getElementById('ne').value),
-            nc: parseInt(document.getElementById('nc').value),
+            nd: ndValue !== '' ? parseInt(ndValue) : null,
+            ne: neValue !== '' ? parseInt(neValue) : null,
+            nc: ncValue !== '' ? parseInt(ncValue) : null,
             medidas: document.getElementById('medidas').value.trim()
         };
     },
@@ -182,8 +216,10 @@ const UI = {
     
     renderizarTabla(riesgos) {
         const container = document.getElementById('tablaContainer');
+        const sortControls = document.getElementById('sortControls');
         
         if (riesgos.length === 0) {
+            sortControls.style.display = 'none';
             container.innerHTML = `
                 <div class="empty-state">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -195,6 +231,8 @@ const UI = {
             `;
             return;
         }
+        
+        sortControls.style.display = 'flex';
         
         const filas = riesgos.map((r, index) => `
             <tr>
@@ -375,6 +413,14 @@ const App = {
         document.getElementById('btnLimpiarTodos').addEventListener('click', () => {
             this.limpiarTodos();
         });
+        
+        // Event listeners para botones de ordenamiento
+        document.querySelectorAll('.btn-sort').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const criterio = e.target.getAttribute('data-sort');
+                this.cambiarOrdenamiento(criterio);
+            });
+        });
     },
     
     procesarFormulario() {
@@ -429,19 +475,33 @@ const App = {
     },
     
     ordenarYMostrar() {
-        AppState.riesgos.sort((a, b) => {
-            if (a.prioridad !== b.prioridad) {
-                return a.prioridad - b.prioridad;
-            }
-            return b.nr - a.nr;
-        });
-        
+        AppState.riesgos = Sorter.ordenar(AppState.riesgos, AppState.ordenActual);
         UI.renderizarTabla(AppState.riesgos);
+        this.actualizarBotonesOrden();
+    },
+    
+    cambiarOrdenamiento(criterio) {
+        AppState.ordenActual = criterio;
+        this.ordenarYMostrar();
+    },
+    
+    actualizarBotonesOrden() {
+        document.querySelectorAll('.btn-sort').forEach(btn => {
+            if (btn.getAttribute('data-sort') === AppState.ordenActual) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
     },
     
     editarRiesgo(index) {
         const riesgo = AppState.riesgos[index];
-        AppState.editIndex = index;
+        
+        // Encontrar el índice real en el array sin ordenar
+        const indexReal = AppState.riesgos.findIndex(r => r.id === riesgo.id);
+        
+        AppState.editIndex = indexReal;
         UI.cargarDatosEnFormulario(riesgo);
     },
     
@@ -453,7 +513,10 @@ const App = {
         try {
             const riesgo = AppState.riesgos[index];
             Storage.eliminarRiesgo(riesgo.id);
-            AppState.riesgos.splice(index, 1);
+            
+            // Eliminar por ID en lugar de índice
+            AppState.riesgos = AppState.riesgos.filter(r => r.id !== riesgo.id);
+            
             this.ordenarYMostrar();
             alert(CONFIG.MESSAGES.SUCCESS_DELETE);
         } catch (e) {

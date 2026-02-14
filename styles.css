@@ -12,23 +12,23 @@
 
 :root {
     /* Colores principales */
-    --color-primary: #667eea;
-    --color-primary-dark: #764ba2;
-    --color-secondary: #2c3e50;
-    --color-secondary-dark: #34495e;
+    --color-primary: #3e658c;
+    --color-primary-dark: #295e92;
+    --color-secondary: #7fb8f1;
+    --color-secondary-dark: #5a8ec2;
     
     /* Colores de estado */
-    --color-success: #28a745;
-    --color-success-hover: #218838;
-    --color-danger: #dc3545;
-    --color-danger-hover: #c82333;
+    --color-success: #71bb82;
+    --color-success-hover: #439655;
+    --color-danger: #cf6d77;
+    --color-danger-hover: #c26871;
     
     /* Niveles de riesgo */
     --nivel-I-bg: #f8d7da;
     --nivel-I-text: #721c24;
-    --nivel-II-bg: #fff3cd;
-    --nivel-II-text: #856404;
-    --nivel-III-bg: #d1ecf1;
+    --nivel-II-bg: #f6cbae;
+    --nivel-II-text: #7f3e10;
+    --nivel-III-bg: #fff3cd;
     --nivel-III-text: #0c5460;
     --nivel-IV-bg: #d4edda;
     --nivel-IV-text: #155724;
